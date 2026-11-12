@@ -1,0 +1,20 @@
+{
+  "device": {
+    "friendlyName": "ch-step-failure-signature",
+    "manufacturer": "ch-packs",
+    "modelDescription": "Step module of the ch-packs family: fingerprints a CI failure so the same failure in two runs has the same signature. A pure function of its input: no disk, no network, no state.",
+    "serviceList": {
+      "urn:ch-packs:serviceID:signatureService": {
+        "actionList": [
+          {
+            "name": "sign",
+            "description": "Takes ch-step-error-patterns' output and returns a stable signature for the failure: the sha256 (64 hex characters) of the failing step's name and that step's error, assertion, stack and exit lines (its tail lines too when nothing but the exit line matched), each normalised so that what changes from run to run does not change the signature: dates and times become T, UUIDs U, durations D, absolute paths and file:// URLs P/<basename>, hex runs and commit SHAs H, numbers not glued to a letter # (an error code such as TS2304 and an exit code are kept), quoted strings over 40 characters \"…\", whitespace collapsed. Also returns the normalised lines and the step.",
+            "input": {"schema": "/signatureService/sign/input"},
+            "output": {"schema": "/signatureService/sign/output"},
+            "fault": {"schema": "/fault/signatureService/sign/fault"}
+          }
+        ]
+      }
+    }
+  }
+}

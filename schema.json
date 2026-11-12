@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "#/",
+  "type": "object",
+  "signatureService": {
+    "sign": {
+      "input": {
+        "type": "object",
+        "properties": {
+          "failingStep": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "error",
+                    "assert",
+                    "stack",
+                    "exit",
+                    "tail"
+                  ]
+                },
+                "step": {
+                  "type": "string"
+                },
+                "index": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "text",
+                "kind"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "failingStep",
+          "lines"
+        ],
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "signature": {
+            "title": "sha256 of the step and the normalised lines, hex",
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "normalised": {
+            "title": "the signed lines, normalised, in order",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "step": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "signature",
+          "normalised",
+          "step"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "fault": {
+    "signatureService": {
+      "sign": {
+        "fault": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "title": "specific error reason",
+              "type": "string"
+            },
+            "info": {
+              "title": "detailed error info",
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}
