@@ -9,6 +9,18 @@ local mode). A step module of the countinghouse client packs: a `part`, loaded b
 Part of the countinghouse client packs. Each package has its own repository; the family's design, plan and acceptance
 tests are in [ch-packs](https://github.com/mchen6/ch-packs) (public).
 
+## What it returns
+
+`signatureService.sign` takes ch-step-error-patterns' output and answers:
+- `signature`: the sha256 of the step and the normalised error lines;
+- `normalised`: those lines;
+- `step`: the failing step;
+- `algorithm`: the name of the normalisation that made the signature, `fs1` today.
+
+A scenario that caches signatures records `algorithm` and rebuilds its cache
+when it changes. Any change to a rule that alters what is signed renames the
+algorithm, and a test pins `fs1`'s signature of a fixed input.
+
 ## Development
 
 ```

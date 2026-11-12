@@ -3,7 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const crypto = require('node:crypto');
 require('./support');
-const {normaliseLine, signatureOf} = require('../lib/normalise');
+const {normaliseLine, signatureOf, ALGORITHM} = require('../lib/normalise');
 const sign = require('../handlers/signatureService/sign');
 
 const run1 = [
@@ -112,6 +112,31 @@ test('handler returns a 64-char hex, the normalised lines and the step', async (
   const {output: same} = await sign({failingStep: 'Run npm test', lines: run1.map((l, index) => ({...l, step: 'Run npm test', index})), truncated: false});
   assert.strictEqual(same.signature, output.signature);
   assert.strictEqual((await sign({failingStep: null, lines: []})).output.step, null);
+});
+
+// The output names the algorithm that made its signature, so a cache of
+// signatures can tell when the algorithm changed and must be rebuilt
+// (reviewer, 2026-11-12). fs1's signature of a fixed input is pinned: change
+// a normalisation rule and this fails until the algorithm is renamed.
+test('the output names its algorithm, and fs1 is pinned to its signature of a fixed input', async () => {
+  assert.strictEqual(ALGORITHM, 'fs1');
+  const {output} = await sign({failingStep: 'Run npm test', lines: run1});
+  assert.strictEqual(output.algorithm, 'fs1');
+  assert.strictEqual(signatureOf('Run npm test', run1), '9106c1f43e58bf6cf25bbb781a5a5371855c3088239ce57c50f4ed191117926d',
+    'a rule changed what fs1 signs: rename ALGORITHM (fs2) and update this pin, so the scenario\'s cache rebuilds');
+});
+
+// The scenario learns the current algorithm with this empty call before it
+// trusts its cache, so the schema must keep accepting it.
+test('the empty probe {failingStep: null, lines: []} is accepted by the handler and by the schema', async () => {
+  const probe = {failingStep: null, lines: []};
+  const {output} = await sign(probe);
+  assert.strictEqual(output.algorithm, ALGORITHM);
+  const Ajv2020 = require('ajv/dist/2020');
+  const schema = require('../schema.json').signatureService.sign;
+  const ajv = new Ajv2020({strict: false});
+  assert.ok(ajv.validate(schema.input, probe), JSON.stringify(ajv.errors));
+  assert.ok(ajv.validate(schema.output, output), JSON.stringify(ajv.errors));
 });
 
 test('handler refuses what is not error-patterns output', async () => {

@@ -1,6 +1,6 @@
 {
   "name": "@countinghouse/ch-step-failure-signature",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "countinghouse step module: a stable fingerprint for a CI failure: the failing step and its error lines, with numbers, paths, times and hashes generalised away.",
   "license": "Apache-2.0",
   "repository": {

@@ -76,12 +76,18 @@
               "string",
               "null"
             ]
+          },
+          "algorithm": {
+            "title": "the algorithm that made the signature (fs1): a cache of signatures rebuilds when it changes",
+            "type": "string",
+            "pattern": "^fs[0-9]+$"
           }
         },
         "required": [
           "signature",
           "normalised",
-          "step"
+          "step",
+          "algorithm"
         ],
         "additionalProperties": false
       }
