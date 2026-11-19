@@ -2,9 +2,12 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const crypto = require('node:crypto');
-require('./support');
 const {normaliseLine, signatureOf, ALGORITHM} = require('../lib/normalise');
-const sign = require('../handlers/signatureService/sign');
+const {CountinghouseError} = require('countinghouse/lib/countinghouse-error');
+// the handler as the runtime calls it: (input, ctx), ctx.error the runtime's
+const ctx = {error: (code, message, details) => CountinghouseError.module(code, message, details)};
+const handler = require('../handlers/signatureService/sign');
+const sign = Object.assign((input) => handler(input, ctx), handler);
 
 const run1 = [
   {text: '✖ adds two numbers (2.1ms)', kind: 'error'},
@@ -140,7 +143,7 @@ test('the empty probe {failingStep: null, lines: []} is accepted by the handler 
 });
 
 test('handler refuses what is not error-patterns output', async () => {
-  const invalid = (err) => err.code === 'ARGUMENTS_INVALID';
+  const invalid = (err) => err.code === 'INPUT_REJECTED';
   for (const bad of [{}, {failingStep: 3, lines: []}, {failingStep: null}, {failingStep: null, lines: [{text: 'x'}]}, {failingStep: null, lines: [{text: 'x', kind: 'other'}]}, null]) {
     await assert.rejects(sign(bad), invalid, JSON.stringify(bad));
   }
