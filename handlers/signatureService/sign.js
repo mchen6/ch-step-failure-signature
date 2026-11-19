@@ -5,11 +5,11 @@ const {ALGORITHM, signatureOf, signedLines, KINDS} = require('../../lib/normalis
 
 const isLine = (l) => l != null && typeof l.text === 'string' && KINDS.includes(l.kind);
 
-module.exports = async (input) => {
+module.exports = async (input, ctx) => {
   const step = input != null ? input.failingStep : undefined;
   const lines = input != null ? input.lines : null;
   if (!(step === null || typeof step === 'string') || !Array.isArray(lines) || !lines.every(isLine)) {
-    throw new DeviceError('ARGUMENTS_INVALID', 'expected ch-step-error-patterns output: {failingStep: string|null, lines: [{text, kind}]}');
+    throw ctx.error('INPUT_REJECTED', 'expected ch-step-error-patterns output: {failingStep: string|null, lines: [{text, kind}]}');
   }
   return {output: {signature: signatureOf(step, lines), normalised: signedLines(lines, step), step, algorithm: ALGORITHM}};
 };
