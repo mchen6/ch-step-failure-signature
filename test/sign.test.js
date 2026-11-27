@@ -119,14 +119,14 @@ test('handler returns a 64-char hex, the normalised lines and the step', async (
 
 // The output names the algorithm that made its signature, so a cache of
 // signatures can tell when the algorithm changed and must be rebuilt
-// (reviewer, 2026-11-12). fs1's signature of a fixed input is pinned: change
+// (reviewer, 2026-11-12). fs2's signature of a fixed input is pinned: change
 // a normalisation rule and this fails until the algorithm is renamed.
-test('the output names its algorithm, and fs1 is pinned to its signature of a fixed input', async () => {
-  assert.strictEqual(ALGORITHM, 'fs1');
+test('the output names its algorithm, and fs2 is pinned to its signature of a fixed input', async () => {
+  assert.strictEqual(ALGORITHM, 'fs2');
   const {output} = await sign({failingStep: 'Run npm test', lines: run1});
-  assert.strictEqual(output.algorithm, 'fs1');
+  assert.strictEqual(output.algorithm, 'fs2');
   assert.strictEqual(signatureOf('Run npm test', run1), '9106c1f43e58bf6cf25bbb781a5a5371855c3088239ce57c50f4ed191117926d',
-    'a rule changed what fs1 signs: rename ALGORITHM (fs2) and update this pin, so the scenario\'s cache rebuilds');
+    'a rule changed what fs2 signs: rename ALGORITHM (fs3) and update this pin, so the scenario\'s cache rebuilds');
 });
 
 // The scenario learns the current algorithm with this empty call before it
@@ -151,4 +151,41 @@ test('handler refuses what is not error-patterns output', async () => {
 
 test('the module is a part: never listed', () => {
   assert.deepStrictEqual(require('../package.json').countinghouse, {role: 'part'});
+});
+
+// Generated temporary file names (fs2): the default shapes of Python's
+// tempfile (CPython Lib/tempfile.py: prefix "tmp" and eight of
+// "abcdefghijklmnopqrstuvwxyz0123456789_", then any suffix) and of GNU
+// mktemp's default template (coreutils: "tmp.XXXXXXXXXX", the X's replaced
+// by alphanumeric characters), in any directory. A random part with no digit
+// (Python) or with neither a capital nor a digit (mktemp) is left alone: real
+// names such as tmp_helpers.py look like that.
+const one = (text) => [{text, kind: 'error'}, {text: '##[error]Process completed with exit code 1.', kind: 'exit'}];
+const same = (a, b) => signatureOf('Run docs', one(a)) === signatureOf('Run docs', one(b));
+
+test('a generated temp file\'s name signs as one, under any temp directory', () => {
+  assert.ok(same('  could not run /tmp/tmpjg271vyh.py', '  could not run /tmp/tmpab12cd3e.py'));
+  assert.ok(same('  could not run /tmp/tmpjg271vyh', '  could not run /tmp/tmp9x_k2m4q'));
+  assert.ok(same('  wrote /var/folders/x1/abc/T/tmpq8w2e7r1.json', '  wrote /var/folders/zz/def/T/tmp3m5n7b9v.json'));
+  assert.ok(same('  wrote C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tmpa1b2c3d4.txt', '  wrote C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tmpz9y8x7w6.txt'));
+  assert.ok(same('  cannot open /tmp/tmp.Ab3dE5fGh9', '  cannot open /tmp/tmp.k2LmN8pQr4'));
+  // (the extension still tells files apart)
+  assert.ok(!same('  could not run /tmp/tmpjg271vyh.py', '  could not run /tmp/tmpab12cd3e.sh'));
+});
+
+test('a real file\'s name still signs distinctly, tmp-named ones included', () => {
+  assert.ok(!same('  failed in /home/u/project/test_api.py', '  failed in /home/u/project/test_db.py'));
+  assert.ok(!same('  failed in /home/u/project/tmp_config.py', '  failed in /home/u/project/tmp_settings.py'));
+  assert.ok(!same('  failed in /tmp/tmp_helpers.py', '  failed in /tmp/tmp_loaders.py'));
+  assert.ok(!same('  failed in /tmp/tmp.configfile', '  failed in /tmp/tmp.backupfile'));
+  assert.ok(!same('  could not run /tmp/tmpjg271vyh.py', '  failed in /home/u/project/test_api.py'));
+});
+
+test('what fs1 already made one stays one: durations, ports, ids, UUIDs, temp directories, times', () => {
+  for (const [a, b] of [['  timeout after 30s', '  timeout after 31.2s'], ['  connection refused 127.0.0.1:43121', '  connection refused 127.0.0.1:51877'],
+    ['  job 88213 failed', '  job 90554 failed'], ['  request 7f3a9c2e failed', '  request a81b4d07 failed'],
+    ['  session 3f2b8c1e-9d4a-4e2b-8f1a-2c3d4e5f6a7b gone', '  session 0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d gone'],
+    ['  wrote /tmp/tmp8k2j9x/out.txt', '  wrote /tmp/tmpq4m1zz/out.txt'], ['  at 2026-11-26T18:01:23Z', '  at 2026-11-27T06:12:09Z']]) assert.ok(same(a, b), a);
+  // (the known limit: a letters-only random word still changes it)
+  assert.ok(!same('  worker nqzvbx crashed', '  worker hjtrlk crashed'));
 });
