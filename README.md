@@ -21,7 +21,7 @@ A scenario that caches signatures records `algorithm` and rebuilds its cache
 when it changes. Any change to a rule that alters what is signed renames the
 algorithm, and a test pins `fs2`'s signature of a fixed input.
 
-A failing line that names any other random word (one of letters only, say, a temporary file named some other way, or one of the few temporary names with no digit in them) still changes the signature, so a recurring failure can read as new.
+A failing line that names any other random word (one of letters only, say, or a temporary file the rule doesn't recognise: named some other way, printed without its temporary directory, or with a random part of a shape the rule doesn't accept) still changes the signature, so a recurring failure can read as new.
 
 ## Development
 

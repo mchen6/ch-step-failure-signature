@@ -127,6 +127,10 @@ test('the output names its algorithm, and fs2 is pinned to its signature of a fi
   assert.strictEqual(output.algorithm, 'fs2');
   assert.strictEqual(signatureOf('Run npm test', run1), '9106c1f43e58bf6cf25bbb781a5a5371855c3088239ce57c50f4ed191117926d',
     'a rule changed what fs2 signs: rename ALGORITHM (fs3) and update this pin, so the scenario\'s cache rebuilds');
+  // (and an input the temp-name rule changes, so editing that rule fails here too)
+  const temp = [{text: '  could not run /tmp/tmpjg271vyh.py', kind: 'error'}, {text: '##[error]Process completed with exit code 1.', kind: 'exit'}];
+  assert.strictEqual(signatureOf('Run docs', temp), '49047fe9d24d41b4651741286ce51b812cdc0134fadb9c6e13aef48f15601ab0',
+    'a rule changed what fs2 signs: rename ALGORITHM (fs3) and update this pin, so the scenario\'s cache rebuilds');
 });
 
 // The scenario learns the current algorithm with this empty call before it
@@ -188,4 +192,22 @@ test('what fs1 already made one stays one: durations, ports, ids, UUIDs, temp di
     ['  wrote /tmp/tmp8k2j9x/out.txt', '  wrote /tmp/tmpq4m1zz/out.txt'], ['  at 2026-11-26T18:01:23Z', '  at 2026-11-27T06:12:09Z']]) assert.ok(same(a, b), a);
   // (the known limit: a letters-only random word still changes it)
   assert.ok(!same('  worker nqzvbx crashed', '  worker hjtrlk crashed'));
+});
+
+// (the medium on fs2: only inside a temporary directory, and only names a
+// person would not write; a sentence's final period does not matter)
+test('only inside a temporary directory, and never a name a person would write', () => {
+  // real names, inside /tmp or not, stay distinct
+  for (const [a, b] of [['/tmp/tmp.Dockerfile', '/tmp/tmp.ConfigFile'], ['/tmp/tmp_test_01.py', '/tmp/tmp_test_02.py'], ['/tmp/tmp_case100.py', '/tmp/tmp_case200.py'],
+    ['/home/u/proj/tmp_test_01.py', '/home/u/proj/tmp_test_02.py'], ['/home/u/proj/tmpjg271vyh.py', '/home/u/proj/tmpab12cd3e.py'],
+    ['/home/u/proj/tmp.Ab3dE5fGh9', '/home/u/proj/tmp.k2LmN8pQr4']]) {
+    assert.ok(!same(`  failed in ${a}`, `  failed in ${b}`), `${a} / ${b}`);
+  }
+});
+
+test('a temp name at a sentence\'s end, and a mktemp name with a suffix, sign as one', () => {
+  assert.ok(same('  cannot open /tmp/tmp.Ab3dE5fGh9.', '  cannot open /tmp/tmp.k2LmN8pQr4.'));
+  assert.ok(same('  could not run /tmp/tmpjg271vyh.py.', '  could not run /tmp/tmpab12cd3e.py.'));
+  assert.ok(same('  cannot open /tmp/tmp.Ab3dE5fGh9.sh', '  cannot open /tmp/tmp.k2LmN8pQr4.sh'));
+  assert.ok(same('  wrote /var/tmp/tmpq8w2e7r1.json', '  wrote /usr/tmp/tmp3m5n7b9v.json'));
 });

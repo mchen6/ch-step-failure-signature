@@ -78,7 +78,7 @@
             ]
           },
           "algorithm": {
-            "title": "the algorithm that made the signature (fs1): a cache of signatures rebuilds when it changes",
+            "title": "the algorithm that made the signature (fs2): a cache of signatures rebuilds when it changes",
             "type": "string",
             "pattern": "^fs[0-9]+$"
           }
